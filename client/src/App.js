@@ -4,6 +4,8 @@ import { Routes } from "react-router-dom";
 import Chat from "./pages/chat";
 import Login from "./pages/login";
 import Signup from "./pages/signup";
+import Dashboard from "./pages/dashboard";
+import Sidebar from "./components/Sidebar";
 
 function App() {
   const isAuthenticated = localStorage.getItem("token");
@@ -11,10 +13,14 @@ function App() {
     <div>
       <BrowserRouter>
         {isAuthenticated ? (
-          <Routes>
-            <Route path="/chat" element={<Chat />} />
-            <Route path="*" element={<Navigate to="/chat" />} />
-          </Routes>
+          <div className="w-full flex">
+            <Sidebar />
+            <Routes>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/chat/:chatId" element={<Chat />} />
+              <Route path="*" element={<Navigate to="/dashboard" />} />
+            </Routes>
+          </div>
         ) : (
           <Routes>
             <Route path="/" element={<Login />} />

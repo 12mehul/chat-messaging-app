@@ -22,12 +22,12 @@ app.use(
     methods: ["GET", "POST", "PUT", "DELETE"],
   })
 );
-io.use({
-  cors: {
-    origin: ["http://localhost:3000", "http://localhost:3001"],
-    allowedHeaders: ["authorization"],
-  },
-});
+// io.use({
+//   cors: {
+//     origin: ["http://localhost:3000", "http://localhost:3001"],
+//     allowedHeaders: ["authorization"],
+//   },
+// });
 
 // Middleware to add socket.io to request
 app.use((req, res, next) => {

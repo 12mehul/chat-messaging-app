@@ -38,7 +38,8 @@ const login = async (req, res) => {
 
 const list = async (req, res) => {
   try {
-    const users = await Admin.findAll();
+    // const currentUserId = req.user.id;
+    const users = await Admin.findAll({});
     res.status(200).send({ users });
   } catch (err) {
     res.status(500).json({ msg: "Internal server error" });

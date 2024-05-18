@@ -7,7 +7,7 @@ const sendMessage = async (messageData) => {
 
 const getChatMessages = async (chatId) => {
   const response = await api.get(`/messages/chat/${chatId}`);
-  return response.data;
+  return response.data.messages;
 };
 
 const markMessageAsRead = async (messageId, userId) => {
