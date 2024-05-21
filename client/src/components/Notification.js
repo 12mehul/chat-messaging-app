@@ -1,6 +1,6 @@
 import React from "react";
 
-const Notification = ({ handleNotifyClose }) => {
+const Notification = ({ clearUnreadCounts, handleNotifyClose }) => {
   return (
     <div className="fixed left-0 top-0 flex h-full w-full items-center justify-center bg-black bg-opacity-50 py-10">
       <div className="max-h-full w-full max-w-xl overflow-y-auto sm:rounded-2xl bg-white">
@@ -16,7 +16,10 @@ const Notification = ({ handleNotifyClose }) => {
               </p>
             </div>
             <div className="space-y-4">
-              <button className="p-3 bg-blue-600 rounded-full text-white w-full font-semibold">
+              <button
+                onClick={clearUnreadCounts}
+                className="p-3 bg-blue-600 rounded-full text-white w-full font-semibold"
+              >
                 Allow notifications
               </button>
               <button

@@ -9,7 +9,7 @@ const Dashboard = () => {
   const [chats, setChats] = useState([]);
   const [unreadCounts, setUnreadCounts] = useState({});
   const navigate = useNavigate();
-  console.log(unreadCounts);
+
   useEffect(() => {
     const fetchChats = async () => {
       const userChats = await getUserChats(userId);

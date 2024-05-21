@@ -1,3 +1,4 @@
+const { Sequelize } = require("sequelize");
 const Admin = require("../models/admin");
 const jwt = require("jsonwebtoken");
 
@@ -46,4 +47,26 @@ const list = async (req, res) => {
   }
 };
 
-module.exports = { signup, login, list };
+const searchUsers = async (req, res) => {
+  try {
+    const search = req.query.search;
+    const regex = `%${search}%`; // For LIKE query in Sequelize
+
+    const users = await Admin.findAll({
+      where: {
+        username: {
+          [Sequelize.Op.like]: regex,
+        },
+      },
+      attributes: {
+        exclude: ["id"],
+      },
+    });
+
+    return res.status(200).json({ users });
+  } catch (err) {
+    res.status(500).json({ msg: "Internal server error" });
+  }
+};
+
+module.exports = { signup, login, list, searchUsers };

@@ -1,18 +1,12 @@
 import React, { useEffect, useState } from "react";
-import CreateChat from "./CreateChat";
-import Notification from "./Notification";
-import api from "../api/axios";
-import NotificationBadge from "react-notification-badge";
-import { Effect } from "react-notification-badge";
-import socket from "../api/socket";
 import { jwtDecode } from "jwt-decode";
+import axios from "axios";
+import { createChat } from "../api/chatService";
 
 const Sidebar = () => {
-  const [open, setOpen] = useState(false);
-  const [notifyOpen, setNotifyOpen] = useState(false);
-  const [availableUsers, setAvailableUsers] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const username = localStorage.getItem("username");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
   const userId = localStorage.getItem("id");
   const token = localStorage.getItem("token");
 
@@ -41,29 +35,6 @@ const Sidebar = () => {
     console.log("Token is still valid");
   }, [token]);
 
-  useEffect(() => {
-    socket.on("newMessage", (message) => {
-      setUnreadCount((prevCount) => prevCount + 1);
-    });
-
-    return () => {
-      socket.off("newMessage");
-    };
-  }, []);
-
-  const handleOpen = () => {
-    setOpen(true);
-  };
-  const handleClose = () => {
-    setOpen(false);
-  };
-  const handleNotifyOpen = () => {
-    setNotifyOpen(true);
-  };
-  const handleNotifyClose = () => {
-    setNotifyOpen(false);
-  };
-
   const handleLogout = () => {
     localStorage.clear();
     setTimeout(() => {
@@ -71,80 +42,96 @@ const Sidebar = () => {
     }, 2000);
   };
 
-  const fetchRelatedUsers = async () => {
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    setLoading(true);
     try {
-      const response = await api.get("/users");
-      const users = response.data.users;
-      setAvailableUsers(users);
+      const response = await axios.get(
+        `http://localhost:5000/api/users?search=${searchTerm}`
+      );
+      setUsers(response.data.users);
     } catch (error) {
-      console.error("Error fetching related users:", error);
-      throw error;
+      console.log("Error fetching users:", error);
+    }
+    setLoading(false);
+  };
+
+  const handleCreateChat = async (selectedUser) => {
+    if (!selectedUser) return;
+
+    const chatData = {
+      chatName: selectedUser.username,
+      isGroupChat: false,
+      users: [selectedUser.id, userId],
+      groupAdmin: userId,
+    };
+
+    try {
+      const chat = await createChat(chatData);
+      console.log("Chat created:", chat);
+    } catch (error) {
+      console.error("Error creating chat:", error);
     }
   };
 
-  useEffect(() => {
-    fetchRelatedUsers();
-  }, []);
-
   return (
     <>
-      <div className="w-1/4 h-[690px] flex flex-col gap-5 p-2 bg-[#f8f4f3] border-r border-gray-300">
+      <div className="lg:w-1/4 w-[45%] h-[690px] flex flex-col gap-5 p-2 bg-[#f8f4f3] border-r border-gray-300 border shadow-lg">
         <div className="flex items-center justify-between px-6 py-2 border-b border-gray-300">
-          <div className="flex items-center">
-            <div>
-              {username && (
-                <span className="text-[#f84525] px-2 text-xl font-semibold">
-                  {username}
-                </span>
-              )}
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={handleNotifyOpen}
-            className="inline-flex items-center justify-center rounded-lg border h-10 w-10 transition duration-500 ease-in-out text-gray-500 hover:bg-gray-300 focus:outline-none"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              className="h-6 w-6"
+          <div className="flex rounded-full px-2 w-full bg-gray-300">
+            <input
+              type="search"
+              className="w-full bg-gray-300 flex pl-2 text-gray-700 outline-0 rounded-full cursor-pointer"
+              placeholder="Search User..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <button
+              type="submit"
+              onClick={handleSearch}
+              className="relative p-2 bg-gray-300 rounded-full"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-              ></path>
-            </svg>
-            <NotificationBadge count={unreadCount} />
-          </button>
-        </div>
-        <div className="flex items-start border-b py-2 border-gray-300">
-          <a
-            className="w-full flex font-semibold gap-3 text-lg items-center py-2 px-4 text-gray-900 hover:bg-gray-400 hover:text-gray-100 rounded-md group-[.active]:bg-gray-800 group-[.active]:text-white group-[.selected]:bg-gray-950 group-[.selected]:text-gray-100 cursor-pointer"
-            onClick={handleOpen}
-          >
-            <div>
               <svg
-                className="h-6 w-6"
-                width="24"
-                height="24"
+                width="30px"
+                height="30px"
                 viewBox="0 0 24 24"
-                strokeWidth="2"
-                stroke="currentColor"
                 fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <path stroke="none" d="M0 0h24v24H0z" />
-                <path d="M5 7h1a2 2 0 0 0 2 -2a1 1 0 0 1 1 -1h6a1 1 0 0 1 1 1a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-9a2 2 0 0 1 2 -2" />
-                <circle cx="12" cy="13" r="3" />
+                <g id="SVGRepo_bgCarrier" strokeWidth="0" />
+                <g
+                  id="SVGRepo_tracerCarrier"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <g id="SVGRepo_iconCarrier">
+                  <path
+                    d="M14.9536 14.9458L21 21M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z"
+                    stroke="#999"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </g>
               </svg>
-            </div>
-            Create Chat
-          </a>
+            </button>
+          </div>
+        </div>
+        <div className="flex items-center justify-between px-6 py-2 border-b border-gray-300">
+          {loading && <p>Loading...</p>}
+          <ul>
+            {users.map((user) => (
+              <li key={user.id} className="flex gap-2">
+                <span>{user.username}-</span>
+                <button
+                  className="text-base font-semibold text-gray-800 hover:text-[#f84525]"
+                  onClick={() => handleCreateChat(user)}
+                >
+                  Select
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
         <div className="flex flex-col gap-2">
           <a
@@ -200,14 +187,6 @@ const Sidebar = () => {
           </a>
         </div>
       </div>
-      {open && (
-        <CreateChat
-          userId={userId}
-          availableUsers={availableUsers}
-          handleClose={handleClose}
-        />
-      )}
-      {notifyOpen && <Notification handleNotifyClose={handleNotifyClose} />}
     </>
   );
 };

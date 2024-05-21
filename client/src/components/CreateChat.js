@@ -7,7 +7,7 @@ const CreateChat = ({ userId, availableUsers, handleClose }) => {
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [groupAdmin, setGroupAdmin] = useState(userId);
 
-  const handleCreateChat = async () => {
+  const handleCreateGroupChat = async () => {
     const chatData = {
       chatName,
       isGroupChat,
@@ -33,7 +33,7 @@ const CreateChat = ({ userId, availableUsers, handleClose }) => {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-opacity-50 z-50">
-      <form onSubmit={handleCreateChat}>
+      <form onSubmit={handleCreateGroupChat}>
         <div className="max-w-sm rounded-3xl bg-gradient-to-b from-sky-300 to-purple-500 p-px">
           <div className="rounded-[calc(1.5rem-1px)] bg-white px-10 p-12">
             <div className="flex gap-3">
@@ -63,7 +63,7 @@ const CreateChat = ({ userId, availableUsers, handleClose }) => {
                           clipRule="evenodd"
                           d="M3.88534 5.2371C3.20538 5.86848 2.75 6.89295 2.75 8.5V15.5C2.75 17.107 3.20538 18.1315 3.88534 18.7629C4.57535 19.4036 5.61497 19.75 7 19.75H17C18.385 19.75 19.4246 19.4036 20.1147 18.7629C20.7946 18.1315 21.25 17.107 21.25 15.5V8.5C21.25 6.89295 20.7946 5.86848 20.1147 5.2371C19.4246 4.59637 18.385 4.25 17 4.25H7C5.61497 4.25 4.57535 4.59637 3.88534 5.2371ZM2.86466 4.1379C3.92465 3.15363 5.38503 2.75 7 2.75H17C18.615 2.75 20.0754 3.15363 21.1353 4.1379C22.2054 5.13152 22.75 6.60705 22.75 8.5V15.5C22.75 17.393 22.2054 18.8685 21.1353 19.8621C20.0754 20.8464 18.615 21.25 17 21.25H7C5.38503 21.25 3.92465 20.8464 2.86466 19.8621C1.79462 18.8685 1.25 17.393 1.25 15.5V8.5C1.25 6.60705 1.79462 5.13152 2.86466 4.1379Z"
                           fill="#2563eb"
-                        ></path>{" "}
+                        ></path>
                         <path
                           id="vector (Stroke)_2"
                           fillRule="evenodd"
@@ -77,7 +77,7 @@ const CreateChat = ({ userId, availableUsers, handleClose }) => {
                 </svg>
               </div>
               <h1 className="text-xl font-semibold text-gray-800">
-                Create a new Chat
+                Create a Group Chat
               </h1>
             </div>
             <div className="mt-8 space-y-8">

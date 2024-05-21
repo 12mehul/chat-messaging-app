@@ -6,6 +6,7 @@ import Login from "./pages/login";
 import Signup from "./pages/signup";
 import Dashboard from "./pages/dashboard";
 import Sidebar from "./components/Sidebar";
+import Header from "./components/Header";
 
 function App() {
   const isAuthenticated = localStorage.getItem("token");
@@ -13,13 +14,16 @@ function App() {
     <div>
       <BrowserRouter>
         {isAuthenticated ? (
-          <div className="w-full flex">
-            <Sidebar />
-            <Routes>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/chat/:chatId" element={<Chat />} />
-              <Route path="*" element={<Navigate to="/dashboard" />} />
-            </Routes>
+          <div>
+            <Header />
+            <div className="w-full flex">
+              <Sidebar />
+              <Routes>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/chat/:chatId" element={<Chat />} />
+                <Route path="*" element={<Navigate to="/dashboard" />} />
+              </Routes>
+            </div>
           </div>
         ) : (
           <Routes>
