@@ -34,8 +34,8 @@ const createChat = async (req, res) => {
 // Get chats for a user
 const getUserChats = async (req, res) => {
   try {
-    const { userId } = req.params;
-    const user = await Admin.findByPk(userId, {
+    const id = req.params.userId;
+    const user = await Admin.findByPk(id, {
       include: {
         model: Chat,
         as: "chats",
@@ -56,6 +56,18 @@ const getUserChats = async (req, res) => {
               },
             ],
           },
+          {
+            model: Message,
+            as: "latestMessage",
+            attributes: ["id", "content", "chatId", "createdAt"],
+            include: [
+              {
+                model: Admin,
+                as: "sender",
+                attributes: ["id", "username"],
+              },
+            ],
+          },
         ],
       },
     });
@@ -66,8 +78,8 @@ const getUserChats = async (req, res) => {
 
     res.status(200).json(user.chats);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ msg: "Internal Server Error" });
+    console.log(error);
+    res.status(500).json({ msg: "Internal Server Error",error });
   }
 };
 

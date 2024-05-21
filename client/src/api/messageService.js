@@ -1,13 +1,21 @@
 import api from "./axios";
 
 const sendMessage = async (messageData) => {
-  const response = await api.post("/messages", messageData);
-  return response.data;
+  try {
+    const response = await api.post("/messages", messageData);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to send message:", error);
+  }
 };
 
 const getChatMessages = async (chatId) => {
-  const response = await api.get(`/messages/chat/${chatId}`);
-  return response.data.messages;
+  try {
+    const response = await api.get(`/messages/chat/${chatId}`);
+    return response.data.messages;
+  } catch (error) {
+    console.error("Failed to fetch chat messages:", error);
+  }
 };
 
 const markMessageAsRead = async (messageId, userId) => {

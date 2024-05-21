@@ -5,6 +5,7 @@ import api from "../api/axios";
 import NotificationBadge from "react-notification-badge";
 import { Effect } from "react-notification-badge";
 import socket from "../api/socket";
+import { jwtDecode } from "jwt-decode";
 
 const Sidebar = () => {
   const [open, setOpen] = useState(false);
@@ -13,6 +14,32 @@ const Sidebar = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const username = localStorage.getItem("username");
   const userId = localStorage.getItem("id");
+  const token = localStorage.getItem("token");
+
+  const isTokenExpired = (token) => {
+    try {
+      if (token === null) return true;
+      const decodedToken = jwtDecode(token);
+      const currentTime = Date.now() / 1000; // Convert milliseconds to seconds
+      return decodedToken.exp < currentTime;
+    } catch (error) {
+      // If token decoding fails, assume it's expired
+      return true;
+    }
+  };
+
+  useEffect(() => {
+    if (!token) return;
+    if (isTokenExpired(token)) {
+      // Token has expired, handle it (e.g., redirect to login page)
+      window.location.href = `/`;
+      localStorage.clear();
+      console.log("Token has expired");
+      return;
+    }
+    // Token is still valid
+    console.log("Token is still valid");
+  }, [token]);
 
   useEffect(() => {
     socket.on("newMessage", (message) => {

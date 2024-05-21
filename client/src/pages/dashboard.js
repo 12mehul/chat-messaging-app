@@ -2,13 +2,14 @@ import React, { useEffect, useState } from "react";
 import { getUserChats } from "../api/chatService";
 import socket from "../api/socket";
 import { useNavigate } from "react-router-dom";
+import { markMessageAsRead } from "../api/messageService";
 
 const Dashboard = () => {
   const userId = localStorage.getItem("id");
   const [chats, setChats] = useState([]);
   const [unreadCounts, setUnreadCounts] = useState({});
   const navigate = useNavigate();
-
+  console.log(unreadCounts);
   useEffect(() => {
     const fetchChats = async () => {
       const userChats = await getUserChats(userId);
@@ -17,21 +18,52 @@ const Dashboard = () => {
 
     fetchChats();
 
-    socket.on("newMessage", (message) => {
+    socket.on("messageReceived", (newMessageReceived) => {
+      const chatMessage = newMessageReceived.newMessage.message;
+
       setUnreadCounts((prevCounts) => ({
         ...prevCounts,
-        [message.chatId]: (prevCounts[message.chatId] || 0) + 1,
+        [chatMessage.chatId]: (prevCounts[chatMessage.chatId] || 0) + 1,
       }));
     });
 
     return () => {
-      socket.off("newMessage");
+      socket.off("messageReceived");
     };
   }, [userId]);
 
-  const handleChatSelect = (chatId) => {
+  const handleChatSelect = async (chatId) => {
     navigate(`/chat/${chatId}`);
+    // Fetch messages for the selected chat
+    const selectedChat = chats.find((chat) => chat.id === chatId);
+    if (selectedChat && selectedChat.messages) {
+      // Mark all unread messages in the chat as read
+      for (let message of selectedChat.messages) {
+        if (message.readBy && !message.readBy.includes(userId)) {
+          try {
+            await markMessageAsRead(message.id, userId);
+            // Update the unread counts
+            setUnreadCounts((prevCounts) => ({
+              ...prevCounts,
+              [chatId]: (prevCounts[chatId] || 1) - 1,
+            }));
+          } catch (error) {
+            console.error("Failed to mark message as read:", error);
+          }
+        }
+      }
+    }
   };
+
+  const sortedChats = [...chats].sort((a, b) => {
+    const dateA = a.latestMessage
+      ? new Date(a.latestMessage.createdAt)
+      : new Date(0);
+    const dateB = b.latestMessage
+      ? new Date(b.latestMessage.createdAt)
+      : new Date(0);
+    return dateB - dateA;
+  });
 
   return (
     <div className="w-full h-auto flex justify-items-start">
@@ -52,7 +84,7 @@ const Dashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {chats.map((chat) => (
+                {sortedChats.map((chat) => (
                   <tr
                     key={chat.id}
                     onClick={() => handleChatSelect(chat.id)}

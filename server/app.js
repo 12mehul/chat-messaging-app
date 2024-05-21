@@ -7,7 +7,6 @@ const server = http.createServer(app);
 const cors = require("cors");
 const { sequelize } = require("./models");
 const port = 5000;
-const io = new Server(server);
 const chats = require("./routes/chat");
 const messages = require("./routes/message");
 const admins = require("./routes/admin");
@@ -22,20 +21,22 @@ app.use(
     methods: ["GET", "POST", "PUT", "DELETE"],
   })
 );
-// io.use({
-//   cors: {
-//     origin: ["http://localhost:3000", "http://localhost:3001"],
-//     allowedHeaders: ["authorization"],
-//   },
-// });
+const io = new Server(server, {
+  cors: {
+    credentials: true,
+    origin: ["http://localhost:3000", "http://localhost:3001"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+  },
+});
+
+// Use authentication middleware
+io.use(authenticateSocket);
 
 // Middleware to add socket.io to request
 app.use((req, res, next) => {
   req.io = io;
   next();
 });
-// Use authentication middleware
-io.use(authenticateSocket);
 
 app.get("/node", (req, res) => res.send("Hello"));
 app.use("/api/chats", chats);
@@ -44,15 +45,17 @@ app.use("/api/users", admins);
 
 // Socket.io
 io.on("connection", (socket) => {
+  console.log("New connection:", socket.id);
   console.log("New user connected", socket.user.username);
+
   socket.on("joinChat", ({ chatId }) => {
     socket.join(chatId);
   });
-  socket.on("sendMessage", ({ chatId, message }) => {
-    // Emit the message event to all users in the chat room
-    io.to(chatId).emit("newMessage", {
+
+  socket.on("newMessage", (newMessage) => {
+    io.emit("messageReceived", {
+      newMessage,
       user: socket.user.username,
-      message,
     });
   });
   socket.on("disconnect", () => {
