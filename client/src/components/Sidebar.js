@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
-import axios from "axios";
+import api from "../api/axios";
 import { createChat } from "../api/chatService";
+import MyToastContainer from "./MyToastContainer";
+import { toast } from "react-toastify";
 
 const Sidebar = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -44,11 +46,13 @@ const Sidebar = () => {
 
   const handleSearch = async (e) => {
     e.preventDefault();
+    if (!searchTerm) {
+      toast.error("Input is empty");
+      return;
+    }
     setLoading(true);
     try {
-      const response = await axios.get(
-        `http://localhost:5000/api/users?search=${searchTerm}`
-      );
+      const response = await api.get(`/users/search?search=${searchTerm}`);
       setUsers(response.data.users);
     } catch (error) {
       console.log("Error fetching users:", error);
@@ -68,7 +72,12 @@ const Sidebar = () => {
 
     try {
       const chat = await createChat(chatData);
-      console.log("Chat created:", chat);
+      if (chat) {
+        toast.success(chat.msg);
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      }
     } catch (error) {
       console.error("Error creating chat:", error);
     }
@@ -76,6 +85,7 @@ const Sidebar = () => {
 
   return (
     <>
+      <MyToastContainer />
       <div className="lg:w-1/4 w-[45%] h-[690px] flex flex-col gap-5 p-2 bg-[#f8f4f3] border-r border-gray-300 border shadow-lg">
         <div className="flex items-center justify-between px-6 py-2 border-b border-gray-300">
           <div className="flex rounded-full px-2 w-full bg-gray-300">
@@ -89,7 +99,7 @@ const Sidebar = () => {
             <button
               type="submit"
               onClick={handleSearch}
-              className="relative p-2 bg-gray-300 rounded-full"
+              className="p-2 bg-gray-300 rounded-full"
             >
               <svg
                 width="30px"

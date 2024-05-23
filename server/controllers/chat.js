@@ -1,3 +1,4 @@
+const { Op } = require("sequelize");
 const Message = require("../models/message");
 const Admin = require("../models/admin");
 const Chat = require("../models/chat");
@@ -7,6 +8,44 @@ const createChat = async (req, res) => {
   try {
     const { chatName, isGroupChat, users, groupAdmin } = req.body;
 
+    // unique user IDs
+    const uniqueUsers = [...new Set(users)];
+
+    if (isGroupChat === false) {
+      // Check if the chat already exists
+      const userChats = await Chat.findAll({
+        where: {
+          isGroupChat: false,
+        },
+        include: [
+          {
+            model: Admin,
+            as: "users",
+            where: {
+              id: {
+                [Op.in]: uniqueUsers,
+              },
+            },
+            through: {
+              attributes: [],
+            },
+          },
+        ],
+      });
+
+      const existingChat = userChats.find((chat) => {
+        const chatUserIds = chat.users.map((user) => user.id);
+        return (
+          uniqueUsers.length === chatUserIds.length &&
+          uniqueUsers.every((id) => chatUserIds.includes(id))
+        );
+      });
+
+      if (existingChat) {
+        return res.status(200).json({ msg: "Chat already exists" });
+      }
+    }
+
     // Create the chat
     const chat = await Chat.create({
       chatName,
@@ -15,18 +54,18 @@ const createChat = async (req, res) => {
     });
 
     // Add users to the chat
-    if (users && users.length > 0) {
+    if (uniqueUsers && uniqueUsers.length > 0) {
       const usersToAdd = await Admin.findAll({
         where: {
-          id: users,
+          id: uniqueUsers,
         },
       });
       await chat.addUsers(usersToAdd);
     }
 
-    res.status(201).json({ chat });
+    res.status(201).json({ chat, msg: "Chat created" });
   } catch (error) {
-    console.error(error);
+    console.log(error);
     res.status(500).json({ msg: "Internal Server Error" });
   }
 };
@@ -45,17 +84,17 @@ const getUserChats = async (req, res) => {
             as: "users",
             attributes: ["id", "username"],
           },
-          {
-            model: Message,
-            as: "messages",
-            include: [
-              {
-                model: Admin,
-                as: "sender",
-                attributes: ["id", "username"],
-              },
-            ],
-          },
+          // {
+          //   model: Message,
+          //   as: "messages",
+          //   include: [
+          //     {
+          //       model: Admin,
+          //       as: "sender",
+          //       attributes: ["id", "username"],
+          //     },
+          //   ],
+          // },
           {
             model: Message,
             as: "latestMessage",
@@ -79,7 +118,31 @@ const getUserChats = async (req, res) => {
     res.status(200).json(user.chats);
   } catch (error) {
     console.log(error);
-    res.status(500).json({ msg: "Internal Server Error",error });
+    res.status(500).json({ msg: "Internal Server Error", error });
+  }
+};
+
+// single chat details
+const getChatDetails = async (req, res) => {
+  try {
+    const id = req.params.chatId;
+    const chat = await Chat.findByPk(id, {
+      include: [
+        {
+          model: Admin,
+          as: "users",
+          attributes: ["id", "username"],
+        },
+      ],
+    });
+
+    if (!chat) {
+      return res.status(404).json({ msg: "Chat not found" });
+    }
+
+    res.status(200).json(chat);
+  } catch (error) {
+    res.status(500).json({ msg: "Internal Server Error" });
   }
 };
 
@@ -114,6 +177,8 @@ const removeUserFromChat = async (req, res) => {
     }
 
     await chat.removeUser(user);
+    await Message.destroy({ where: { chatId } });
+
     res.status(200).json({ msg: "User removed from chat" });
   } catch (error) {
     console.error(error);
@@ -124,6 +189,7 @@ const removeUserFromChat = async (req, res) => {
 module.exports = {
   createChat,
   getUserChats,
+  getChatDetails,
   addUserToChat,
   removeUserFromChat,
 };

@@ -58,9 +58,6 @@ const searchUsers = async (req, res) => {
           [Sequelize.Op.like]: regex,
         },
       },
-      attributes: {
-        exclude: ["id"],
-      },
     });
 
     return res.status(200).json({ users });

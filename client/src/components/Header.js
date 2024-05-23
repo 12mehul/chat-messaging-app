@@ -11,6 +11,7 @@ const Header = () => {
   const [availableUsers, setAvailableUsers] = useState([]);
   const [notifyOpen, setNotifyOpen] = useState(false);
   const [unreadCounts, setUnreadCounts] = useState({});
+  const [notifications, setNotifications] = useState([]);
   const userId = localStorage.getItem("id");
   const username = localStorage.getItem("username");
 
@@ -48,6 +49,8 @@ const Header = () => {
       console.log(newMessageReceived);
       const chatId = newMessageReceived.newMessage.message.chatId;
       const senderId = newMessageReceived.newMessage.message.senderId;
+      const messageContent = newMessageReceived.newMessage.message.content;
+      const senderUsername = newMessageReceived.user;
 
       // Update the unread count only if the message is not sent by the current user
       if (senderId !== userId) {
@@ -55,6 +58,12 @@ const Header = () => {
           ...prevCounts,
           [chatId]: (prevCounts[chatId] || 0) + 1,
         }));
+
+        // Add to notifications
+        setNotifications((prevNotifications) => [
+          ...prevNotifications,
+          { chatId, senderUsername, messageContent },
+        ]);
       }
     });
 
@@ -72,6 +81,7 @@ const Header = () => {
   // Clear all unread counts
   const clearUnreadCounts = () => {
     setUnreadCounts({});
+    setNotifications([]);
   };
 
   return (
@@ -107,28 +117,30 @@ const Header = () => {
             </svg>
           </button>
         </div>
-        <div className="relative flex items-center space-x-4">
-          <button
-            type="button"
-            onClick={handleNotifyOpen}
-            className="inline-flex items-center justify-center rounded-lg border h-10 w-10 transition duration-500 ease-in-out text-gray-500 hover:bg-gray-300 focus:outline-none"
-          >
+        <div className="flex items-center space-x-4">
+          <div>
             <NotificationBadge count={totalUnreadCount} effect={Effect.SCALE} />
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              className="h-6 w-6"
+            <button
+              type="button"
+              onClick={handleNotifyOpen}
+              className="flex items-center justify-center rounded-lg border h-10 w-10 transition duration-500 ease-in-out text-gray-500 hover:bg-gray-300 focus:outline-none"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-              ></path>
-            </svg>
-          </button>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                className="h-6 w-6"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                ></path>
+              </svg>
+            </button>
+          </div>
           <div>
             <img
               src="https://images.unsplash.com/photo-1549078642-b2ba4bda0cdb?ixlib=rb-1.2.1&amp;ixid=eyJhcHBfaWQiOjEyMDd9&amp;auto=format&amp;fit=facearea&amp;facepad=3&amp;w=144&amp;h=144"
@@ -149,6 +161,7 @@ const Header = () => {
       </div>
       {notifyOpen && (
         <Notification
+          notifications={notifications}
           clearUnreadCounts={clearUnreadCounts}
           handleNotifyClose={handleNotifyClose}
         />

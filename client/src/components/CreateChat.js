@@ -1,23 +1,34 @@
 import React, { useState } from "react";
 import { createChat } from "../api/chatService";
+import { toast } from "react-toastify";
 
 const CreateChat = ({ userId, availableUsers, handleClose }) => {
   const [chatName, setChatName] = useState("");
-  const [isGroupChat, setIsGroupChat] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState([]);
-  const [groupAdmin, setGroupAdmin] = useState(userId);
 
-  const handleCreateGroupChat = async () => {
+  const handleCreateGroupChat = async (e) => {
+    e.preventDefault();
+    if (!chatName) {
+      toast.error("Please enter a chat name");
+      return;
+    }
+
     const chatData = {
       chatName,
-      isGroupChat,
+      isGroupChat: true,
       users: selectedUsers,
-      groupAdmin,
+      groupAdmin: userId,
     };
 
     try {
       const chat = await createChat(chatData);
-      console.log("Chat created:", chat);
+      if (chat) {
+        toast.success("Group Chat created.");
+        handleClose();
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      }
     } catch (error) {
       console.error("Failed to create chat:", error);
     }
@@ -89,17 +100,6 @@ const CreateChat = ({ userId, availableUsers, handleClose }) => {
                   value={chatName}
                   onChange={(e) => setChatName(e.target.value)}
                 />
-              </div>
-              <div className="space-y-3">
-                <label className="flex gap-3 items-center space-x-2 text-base font-semibold text-gray-800">
-                  Group Chat:
-                  <input
-                    className="bg-transparent text-gray-600 rounded-md border border-gray-300 px-3 py-2 text-sm placeholder-gray-600 invalid:border-red-500"
-                    type="checkbox"
-                    checked={isGroupChat}
-                    onChange={(e) => setIsGroupChat(e.target.checked)}
-                  />
-                </label>
               </div>
               <div>
                 <h2 className="text-base font-semibold text-gray-800">
