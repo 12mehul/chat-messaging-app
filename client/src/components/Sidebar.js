@@ -86,8 +86,8 @@ const Sidebar = () => {
   return (
     <>
       <MyToastContainer />
-      <div className="lg:w-1/4 w-[45%] h-[690px] flex flex-col gap-5 p-2 bg-[#f8f4f3] border-r border-gray-300 border shadow-lg">
-        <div className="flex items-center justify-between px-6 py-2 border-b border-gray-300">
+      <div className="lg:w-1/4 w-[45%] h-[690px] flex flex-col gap-3 p-2 bg-[#f8f4f3] border-r border-gray-300 border shadow-lg">
+        <div className="w-full flex border-b py-2 border-gray-300">
           <div className="flex rounded-full px-2 w-full bg-gray-300">
             <input
               type="search"
@@ -127,14 +127,17 @@ const Sidebar = () => {
             </button>
           </div>
         </div>
-        <div className="flex items-center justify-between px-6 py-2 border-b border-gray-300">
+        <div className="w-full border-b pb-2 border-gray-300">
           {loading && <p>Loading...</p>}
           <ul>
             {users.map((user) => (
-              <li key={user.id} className="flex gap-2">
+              <li
+                key={user.id}
+                className="flex justify-between w-full font-semibold text-lg py-2 px-4 mt-1 bg-gray-200 text-gray-800 rounded-md"
+              >
                 <span>{user.username}-</span>
                 <button
-                  className="text-base font-semibold text-gray-800 hover:text-[#f84525]"
+                  className="text-base hover:text-[#f84525]"
                   onClick={() => handleCreateChat(user)}
                 >
                   Select
